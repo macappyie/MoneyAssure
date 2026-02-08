@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Intraday Scanner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1>📊 Intraday Scanner</h1>
+
+<div class="panel">
+  <h2>Top by % Change <span class="status">● offline</span></h2>
+  <canvas id="topChart"></canvas>
+</div>
+
+<div class="panel">
+  <h2>Bottom by % Change <span class="status">● offline</span></h2>
+  <canvas id="bottomChart"></canvas>
+</div>
+
+<script>
+const topLabels = {{ top | map(attribute='symbol') | list | tojson }};
+const topValues = {{ top | map(attribute='pct') | list | tojson }};
+
+const botLabels = {{ bottom | map(attribute='symbol') | list | tojson }};
+const botValues = {{ bottom | map(attribute='pct') | list | tojson }};
+
+function makeChart(id, labels, values, color) {
+  new Chart(document.getElementById(id), {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: color,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: c => c.raw + "%" }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:"#fff" }, grid:{ display:false }},
+        y: { ticks:{ color:"#fff" }, grid:{ color:"#1e293b" }}
+      }
+    }
+  });
+}
+
+makeChart("topChart", topLabels, topValues, "#22c55e");
+makeChart("bottomChart", botLabels, botValues, "#ef4444");
+</script>
+
+</body>
+</html>
+

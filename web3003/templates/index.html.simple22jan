@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Intraday Scanner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+<body>
+
+<h1>📊 Intraday Scanner</h1>
+
+<div class="panel">
+  <h2>Top by % Change (Volume on Top)</h2>
+  <canvas id="topPct"></canvas>
+</div>
+
+<div class="panel">
+  <h2>Bottom by % Change (Volume on Top)</h2>
+  <canvas id="botPct"></canvas>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+function draw(id, labels, values, volText, color) {
+  new Chart(document.getElementById(id), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: color,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.raw + "%"
+          }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#e5e7eb',
+          font: { size: 10, weight: 'bold' },
+          formatter: (v, ctx) => volText[ctx.dataIndex]
+        }
+      },
+      scales: {
+        x: { ticks:{ color:"#fff" }, grid:{ display:false }},
+        y: { ticks:{ color:"#fff" }, grid:{ color:"#1e293b" }}
+      }
+    }
+  });
+}
+
+draw(
+  "topPct",
+  {{ top_pct | map(attribute='symbol') | list | tojson }},
+  {{ top_pct | map(attribute='pct') | list | tojson }},
+  {{ top_pct | map(attribute='vol_txt') | list | tojson }},
+  "#22c55e"
+);
+
+draw(
+  "botPct",
+  {{ bot_pct | map(attribute='symbol') | list | tojson }},
+  {{ bot_pct | map(attribute='pct') | list | tojson }},
+  {{ bot_pct | map(attribute='vol_txt') | list | tojson }},
+  "#ef4444"
+);
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MoneyAssure Intraday Dashboard</title>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="180">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<h1>📊 MoneyAssure Intraday Dashboard</h1>
+
+<div class="container">
+
+  <!-- ===== GAINERS ===== -->
+  <div class="box">
+    <h2>🟢 Gainers ({{ g_count }})</h2>
+    <table>
+      <tr>
+        <th>Stock</th>
+        <th>LTP</th>
+        <th>% Change</th>
+        <th>9:15 Vol</th>
+        <th>Volatile %</th>
+        <th>SAFE ZONE %</th>
+        <th>DIFF10am</th>
+        <th>Total Vol</th>
+        <th>Tags</th>
+      </tr>
+      {% for s in gainers %}
+      <tr>
+        <td>{{ s.symbol }}</td>
+        <td>{{ s.ltp }}</td>
+        <td class="green">{{ s.change }}%</td>
+        <td>{{ s.vol915 }}</td>
+        <td class="green">{{ s.volatile }}%</td>
+        <td class="green">{{ s.safe }}%</td>
+        <td class="green">{{ s.diff10 }} {{ s.icon }}</td>
+        <td>{{ s.total_vol }}</td>
+        <td>{{ s.tags }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- ===== LOSERS ===== -->
+  <div class="box">
+    <h2>🔴 Losers ({{ l_count }})</h2>
+    <table>
+      <tr>
+        <th>Stock</th>
+        <th>LTP</th>
+        <th>% Change</th>
+        <th>9:15 Vol</th>
+        <th>Volatile %</th>
+        <th>SAFE ZONE %</th>
+        <th>DIFF10am</th>
+        <th>Total Vol</th>
+        <th>Tags</th>
+      </tr>
+      {% for s in losers %}
+      <tr>
+        <td>{{ s.symbol }}</td>
+        <td>{{ s.ltp }}</td>
+        <td class="red">{{ s.change }}%</td>
+        <td>{{ s.vol915 }}</td>
+        <td class="red">{{ s.volatile }}%</td>
+        <td class="red">{{ s.safe }}%</td>
+        <td class="red">{{ s.diff10 }} {{ s.icon }}</td>
+        <td>{{ s.total_vol }}</td>
+        <td>{{ s.tags }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+</div>
+
+</body>
+</html>
+

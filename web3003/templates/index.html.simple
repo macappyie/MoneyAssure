@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Intraday Scanner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1>📊 Intraday Scanner</h1>
+
+<div class="panel">
+  <h2>Top by % Change</h2>
+  <canvas id="topPct"></canvas>
+</div>
+
+<div class="panel">
+  <h2>Bottom by % Change</h2>
+  <canvas id="botPct"></canvas>
+</div>
+
+<script>
+function safeDraw(id, labels, values, color, suffix="") {
+  if (!labels || labels.length === 0) return;
+
+  new Chart(document.getElementById(id), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: color,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: { label: c => c.raw + suffix }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:"#fff" }, grid:{ display:false }},
+        y: { ticks:{ color:"#fff" }, grid:{ color:"#1e293b" }}
+      }
+    }
+  });
+}
+
+safeDraw(
+  "topPct",
+  {{ top_pct | default([]) | map(attribute='symbol') | list | tojson }},
+  {{ top_pct | default([]) | map(attribute='pct') | list | tojson }},
+  "#22c55e", "%"
+);
+
+safeDraw(
+  "botPct",
+  {{ bot_pct | default([]) | map(attribute='symbol') | list | tojson }},
+  {{ bot_pct | default([]) | map(attribute='pct') | list | tojson }},
+  "#ef4444", "%"
+);
+</script>
+
+</body>
+</html>
+

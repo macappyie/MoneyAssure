@@ -1,0 +1,152 @@
+
+/* ================= GLOBAL ================= */
+body {
+  background: #0b1220;
+  color: #e5e7eb;
+  font-family: Arial, sans-serif;
+  padding: 8px;
+  font-size: 12px;
+}
+
+/* ================= HEADERS ================= */
+h1 {
+  text-align: center;
+  font-size: 18px;
+  margin: 6px 0;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 14px;
+  margin: 4px 0;
+  font-weight: 600;
+}
+
+/* ================= LAYOUT (DO NOT CHANGE) ================= */
+/* 👇 THIS ENSURES GAINERS LEFT, LOSERS RIGHT */
+.container {
+  display: flex;
+  flex-direction: row;   /* 🔒 FORCE LEFT → RIGHT */
+  gap: 8px;
+}
+
+.section {
+  margin-bottom: 12px;
+}
+
+.box {
+  width: 50%;            /* 🔒 EACH SIDE 50% */
+  background: #020617;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+/* ================= TABLE ================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+th {
+  font-size: 11px;
+  padding: 4px 3px;
+  border-bottom: 1px solid #1e293b;
+  white-space: nowrap;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+td {
+  font-size: 11px;
+  padding: 3px 3px;
+  text-align: center;
+  border-bottom: 1px solid #1e293b;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+/* Row hover (scanner feel) */
+tr:hover td {
+  background: rgba(148, 163, 184, 0.06);
+}
+
+/* ================= COLORS ================= */
+.green {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.red {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.yellow {
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ================= COLUMN TUNING ================= */
+/* Stock name left aligned */
+td:first-child {
+  text-align: left;
+  padding-left: 6px;
+}
+
+/* Tags smallest */
+td:last-child {
+  font-size: 10px;
+}
+
+/* ================= TAG BADGES ================= */
+.badge-buy {
+  background: rgba(34, 197, 94, 0.18);
+  color: #22c55e;
+  padding: 1px 5px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.badge-sell {
+  background: rgba(239, 68, 68, 0.18);
+  color: #ef4444;
+  padding: 1px 5px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* ================= DIFF10am ================= */
+.diff-pos {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.diff-neg {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* ================= SCROLLBAR ================= */
+::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 6px;
+}
+
+/* ================= RESPONSIVE (ONLY WHEN REALLY SMALL) ================= */
+/* 👇 Desktop & laptop pe LEFT/RIGHT hi rahega */
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;   /* mobile pe hi stack */
+  }
+  .box {
+    width: 100%;
+  }
+}
+

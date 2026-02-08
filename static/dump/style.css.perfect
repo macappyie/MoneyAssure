@@ -1,0 +1,87 @@
+body {
+  background: #0b1220;
+  color: white;
+  font-family: Arial, sans-serif;
+  padding: 10px;
+  font-size: 12px;          /* 🔽 more compact */
+}
+
+h1 {
+  text-align: center;
+  font-size: 18px;          /* 🔽 title smaller */
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.container {
+  display: flex;
+  gap: 10px;                /* 🔽 minimal gap */
+}
+
+.box {
+  width: 50%;
+  background: #020617;
+  padding: 8px;             /* 🔽 tight padding */
+  border-radius: 8px;
+}
+
+/* ===== TABLE ===== */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+th {
+  font-size: 11px;          /* 🔽 header font */
+  padding: 4px 3px;
+  border-bottom: 1px solid #1e293b;
+  white-space: nowrap;
+}
+
+td {
+  font-size: 11px;          /* 🔽 row font */
+  padding: 3px 3px;         /* 🔽 ultra compact rows */
+  text-align: center;
+  border-bottom: 1px solid #1e293b;
+  white-space: nowrap;
+  line-height: 1.15;        /* 🔽 tighter line height */
+}
+
+/* ===== COLORS ===== */
+
+.green {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.red {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.yellow {
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ===== TAGS ===== */
+td:last-child {
+  font-size: 10px;          /* 🔽 smallest for tags */
+}
+
+/* ===== OPTIONAL: hide scrollbars (clean look) ===== */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 6px;
+}
+

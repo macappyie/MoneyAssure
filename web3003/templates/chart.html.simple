@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ symbol }} – 5 Min Chart</title>
+  <script src="https://unpkg.com/lightweight-charts@4.0.1/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    body { margin:0; background:#000; color:#fff; }
+    #title { padding:10px; font-size:18px; }
+    #chart { height: calc(100vh - 40px); }
+  </style>
+</head>
+<body>
+
+<div id="title">📈 {{ symbol }} – 5 Min</div>
+<div id="chart"></div>
+
+<script>
+const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+  layout: { background:{color:"#000"}, textColor:"#ccc" },
+  grid: { vertLines:{color:"#222"}, horzLines:{color:"#222"} },
+  timeScale: { timeVisible:true }
+});
+
+const candle = chart.addCandlestickSeries();
+const sma = chart.addLineSeries({ color:"#2196f3", lineWidth:2 });
+
+fetch(`/api/chart/{{ symbol }}`)
+.then(r => r.json())
+.then(d => {
+  candle.setData(d.candles);
+  sma.setData(d.sma50);
+
+  if (d.hi10) chart.addHorizontalLine({ price:d.hi10, color:"#fff", lineWidth:1 });
+  if (d.lo10) chart.addHorizontalLine({ price:d.lo10, color:"#fff", lineWidth:1 });
+
+  chart.timeScale().fitContent();
+});
+</script>
+
+</body>
+</html>
+

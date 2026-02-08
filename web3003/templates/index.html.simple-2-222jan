@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Intraday Scanner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+<body>
+
+<h1>📊 Intraday Scanner</h1>
+
+<div class="panel">
+  <h2>Top by % Change (Volume on Top)</h2>
+  <canvas id="topPct"></canvas>
+</div>
+
+<div class="panel">
+  <h2>Bottom by % Change (Volume on Top)</h2>
+  <canvas id="botPct"></canvas>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+// 🔥 KEEP GLOBAL REFERENCES (to avoid blank chart)
+let topChart = null;
+let botChart = null;
+
+function drawChart(canvasId, data, color, isBottom=false) {
+
+  if (!data || data.length === 0) return;
+
+  // 🔥 Destroy old chart (CRITICAL FIX)
+  if (canvasId === "topPct" && topChart) topChart.destroy();
+  if (canvasId === "botPct" && botChart) botChart.destroy();
+
+  const ctx = document.getElementById(canvasId).getContext("2d");
+
+  const chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: data.map(d => d.symbol),
+      datasets: [{
+        data: data.map(d => d.pct),
+        backgroundColor: color,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 20 } },   // 🔥 space for labels
+      plugins: {
+        legend: { display:false },
+
+        datalabels: {
+          color: "#ffffff",
+          font: { size: 10, weight: "bold" },
+
+          // 🔥 FORCE LABEL INSIDE BAR
+          anchor: 'end',
+          align: isBottom ? 'start' : 'end',
+          offset: 2,
+
+          formatter: (v, ctx) => data[ctx.dataIndex].vol_txt
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color:"#ffffff",
+            font: { weight: "bold", size: 11 },
+            maxRotation: 30,
+            minRotation: 30
+          },
+          grid:{ display:false }
+        },
+        y: {
+          ticks:{ color:"#cbd5f5" },
+          grid:{ color:"#1e293b" }
+        }
+      },
+      onClick: (e, els) => {
+        if (els.length > 0) {
+          const sym = data[els[0].index].symbol;
+          window.open(`/chart/${sym}`, "_blank");
+        }
+      }
+    }
+  });
+
+  if (canvasId === "topPct") topChart = chart;
+  if (canvasId === "botPct") botChart = chart;
+}
+
+drawChart(
+  "topPct",
+  {{ top_pct | tojson }},
+  "#00e676",
+  false
+);
+
+drawChart(
+  "botPct",
+  {{ bot_pct | tojson }},
+  "#ff1744",
+  true
+);
+</script>
+
+</body>
+</html>
+

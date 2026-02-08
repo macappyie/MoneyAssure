@@ -1,0 +1,86 @@
+body {
+  background: #0b1220;
+  color: white;
+  font-family: Arial, sans-serif;
+  padding: 14px;
+  font-size: 13px;          /* 🔽 overall font smaller */
+}
+
+h1 {
+  text-align: center;
+  font-size: 20px;          /* 🔽 title smaller */
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.container {
+  display: flex;
+  gap: 14px;                /* 🔽 less gap */
+}
+
+.box {
+  width: 50%;
+  background: #020617;
+  padding: 10px;            /* 🔽 less padding */
+  border-radius: 10px;
+}
+
+/* ===== TABLE ===== */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+th {
+  font-size: 12px;          /* 🔽 header font */
+  padding: 6px 4px;
+  border-bottom: 1px solid #1e293b;
+  white-space: nowrap;
+}
+
+td {
+  font-size: 12px;          /* 🔽 row font */
+  padding: 5px 4px;         /* 🔽 row height */
+  text-align: center;
+  border-bottom: 1px solid #1e293b;
+  white-space: nowrap;
+}
+
+/* ===== COLORS ===== */
+
+.green {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.red {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.yellow {
+  color: #facc15;
+  font-weight: 600;
+}
+
+.empty {
+  opacity: 0.7;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* ===== TAGS ===== */
+td:last-child {
+  font-size: 11px;          /* 🔽 tags slightly smaller */
+}
+
