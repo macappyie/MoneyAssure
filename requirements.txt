@@ -1,6 +1,6 @@
 streamlit
+flask
 pandas
-numpy
 kiteconnect
 requests
 matplotlib
