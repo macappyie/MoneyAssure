@@ -11,8 +11,8 @@ app = Flask(__name__)
 # ================= CONFIG =================
 API_KEY = "awh2j04pcd83zfvq"
 
-with open("access_token.txt") as f:
-    ACCESS_TOKEN = f.read().strip()
+
+ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 
 kite = KiteConnect(api_key=API_KEY)
 kite.set_access_token(ACCESS_TOKEN)
