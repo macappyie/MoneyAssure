@@ -1,0 +1,168 @@
+from flask import Flask, render_template, jsonify
+import pandas as pd
+from kiteconnect import KiteConnect
+from datetime import datetime, timedelta, time as dtime
+import time
+
+app = Flask(__name__)
+
+# ================= CONFIG =================
+API_KEY = "awh2j04pcd83zfvq"
+with open("access_token.txt") as f:
+    ACCESS_TOKEN = f.read().strip()
+
+kite = KiteConnect(api_key=API_KEY)
+kite.set_access_token(ACCESS_TOKEN)
+
+# ================= LOAD INSTRUMENTS =================
+df = pd.read_csv("instruments.csv", low_memory=False)
+df = df[(df.exchange == "NSE") & (df.instrument_type == "EQ")]
+symbol_token = dict(zip(df.tradingsymbol, df.instrument_token))
+
+with open("watchlist.txt") as f:
+    WATCHLIST = [x.strip() for x in f if x.strip()]
+
+# ================= HELPERS =================
+def fmt_vol(v):
+    try:
+        v = float(v)
+    except:
+        return v
+    if v >= 1e7:
+        return f"{v/1e7:.2f} Cr"
+    if v >= 1e5:
+        return f"{v/1e5:.2f} L"
+    if v >= 1e3:
+        return f"{v/1e3:.1f} K"
+    return str(int(v))
+
+# ================= INDEX =================
+@app.route("/")
+def index():
+    rows = []
+    today = datetime.now().date()
+
+    tokens = [symbol_token[s] for s in WATCHLIST if s in symbol_token]
+    if not tokens:
+        return render_template("index.html", gainers=[], losers=[])
+
+    quotes = kite.quote(tokens)
+
+    for sym in WATCHLIST:
+        if sym not in symbol_token:
+            continue
+        try:
+            token = symbol_token[sym]
+            q = quotes.get(str(token))
+            if not q:
+                continue
+
+            ltp = q["last_price"]
+            prev_close = q["ohlc"]["close"]
+            if prev_close == 0:
+                continue
+
+            pct_change = round(((ltp - prev_close) / prev_close) * 100, 2)
+            total_vol = q.get("volume", 0)
+
+            candles = kite.historical_data(token, today, today, "5minute")
+            if not candles or len(candles) < 2:
+                continue
+
+            c915 = candles[0]
+            candle_10 = next((c for c in candles if c["date"].strftime("%H:%M") == "10:00"), None)
+            candle_12 = next((c for c in candles if c["date"].strftime("%H:%M") == "12:00"), None)
+
+            rows.append({
+                "symbol": sym,
+                "ltp": round(ltp, 2),
+                "change": pct_change,
+                "vol_915": fmt_vol(c915["volume"]),
+
+                "pct_915_high": round(((c915["high"] - prev_close) / prev_close) * 100, 2),
+                "pct_915_low": round(((c915["low"] - prev_close) / prev_close) * 100, 2),
+
+                "pct_10_high": round(((candle_10["high"] - prev_close) / prev_close) * 100, 2) if candle_10 else "",
+                "pct_10_low": round(((candle_10["low"] - prev_close) / prev_close) * 100, 2) if candle_10 else "",
+
+                "pct_12_high": round(((candle_12["high"] - prev_close) / prev_close) * 100, 2) if candle_12 else "",
+                "pct_12_low": round(((candle_12["low"] - prev_close) / prev_close) * 100, 2) if candle_12 else "",
+
+                "total_vol": fmt_vol(total_vol)
+            })
+
+            time.sleep(0.2)
+
+        except Exception as e:
+            print("ERR:", sym, e)
+
+    dfm = pd.DataFrame(rows)
+
+    if dfm.empty or "change" not in dfm.columns:
+        return render_template("index.html", gainers=[], losers=[])
+
+    # ✅ ONLY CHANGE: 15 STOCKS
+    gainers = dfm[dfm["change"] > 0].sort_values("change", ascending=False).head(15)
+    losers  = dfm[dfm["change"] < 0].sort_values("change").head(15)
+
+    return render_template(
+        "index.html",
+        gainers=gainers.to_dict("records"),
+        losers=losers.to_dict("records")
+    )
+
+# ================= CHART =================
+@app.route("/chart/<symbol>")
+def chart(symbol):
+    return render_template("chart.html", symbol=symbol)
+
+# ================= API =================
+@app.route("/api/candles/<symbol>")
+def api_candles(symbol):
+    if symbol not in symbol_token:
+        return jsonify({})
+
+    token = symbol_token[symbol]
+    to_date = datetime.now().date()
+    from_date = to_date - timedelta(days=3)
+
+    candles = kite.historical_data(token, from_date, to_date, "5minute")
+
+    chart, closes, times = [], [], []
+    today = datetime.now().date()
+
+    for c in candles:
+        t = c["date"].time()
+        if t < dtime(9, 15) or t > dtime(15, 30):
+            continue
+
+        ts = int(c["date"].timestamp()) - 19800
+
+        chart.append({
+            "time": ts,
+            "open": c["open"],
+            "high": c["high"],
+            "low": c["low"],
+            "close": c["close"]
+        })
+
+        closes.append(c["close"])
+        times.append(ts)
+
+    sma20, sma50 = [], []
+
+    for i in range(len(closes)):
+        if i >= 19:
+            sma20.append({"time": times[i], "value": sum(closes[i-19:i+1]) / 20})
+        if i >= 49:
+            sma50.append({"time": times[i], "value": sum(closes[i-49:i+1]) / 50})
+
+    return jsonify({
+        "candles": chart,
+        "sma20": sma20,
+        "sma50": sma50
+    })
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3002, debug=True)
+

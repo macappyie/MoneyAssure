@@ -2,26 +2,25 @@ from flask import Flask, render_template, jsonify
 import pandas as pd
 from kiteconnect import KiteConnect
 from datetime import datetime, timedelta, time as dtime
-import time
-import json
-import os
+import time, json, os
 
 app = Flask(__name__)
 
 # ================= CONFIG =================
 API_KEY = "awh2j04pcd83zfvq"
 
-# READ TOKEN FROM ENV (RENDER SAFE)
 ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
+if not ACCESS_TOKEN:
+    raise Exception("ACCESS_TOKEN environment variable not set")
 
 kite = KiteConnect(api_key=API_KEY)
 kite.set_access_token(ACCESS_TOKEN)
 
-# ================= FIRST SEEN (PERSISTENT) =================
+# ================= FIRST SEEN =================
 FIRST_SEEN_FILE = "first_seen.json"
 
 if os.path.exists(FIRST_SEEN_FILE):
-    with open(FIRST_SEEN_FILE, "r") as f:
+    with open(FIRST_SEEN_FILE) as f:
         FIRST_SEEN = json.load(f)
 else:
     FIRST_SEEN = {}
@@ -41,20 +40,14 @@ def fmt_vol(v):
     if v >= 1e3: return f"{v/1e3:.1f} K"
     return str(int(v))
 
-# ================= INDEX PAGE =================
+# ================= INDEX =================
 @app.route("/")
 def index():
-
-    # small delay for render cold start
-    time.sleep(2)
 
     rows = []
     today = datetime.now().date()
 
     tokens = [symbol_token[s] for s in WATCHLIST if s in symbol_token]
-    if not tokens:
-        return render_template("index.html", gainers=[], losers=[])
-
     quotes = kite.quote(tokens)
 
     for sym in WATCHLIST:
@@ -72,75 +65,25 @@ def index():
                 continue
 
             c915 = candles[0]
-            c10 = next((c for c in candles if c["date"].strftime("%H:%M")=="10:00"),None)
-            c12 = next((c for c in candles if c["date"].strftime("%H:%M")=="12:00"),None)
-
-            from_date_vol = today - timedelta(days=15)
-            vol_candles = kite.historical_data(
-                token,
-                from_date_vol,
-                today - timedelta(days=1),
-                "day"
-            )
-
-            avg_vol_7d = ""
-            avg_raw_7d = 0
-
-            if len(vol_candles) >= 7:
-                vols = [c["volume"] for c in vol_candles[-7:]]
-                avg_raw_7d = sum(vols) / len(vols)
-                avg_vol_7d = fmt_vol(avg_raw_7d)
-
-            vol_915 = fmt_vol(c915["volume"])
-
-            today_vs = ""
-            today_vs_num = 0
-            if avg_raw_7d > 0:
-                ratio = round(total_vol / avg_raw_7d, 2)
-                today_vs = f"{ratio}x"
-                today_vs_num = ratio
 
             rows.append({
-                "symbol":sym,
-                "ltp":round(ltp,2),
-                "change":pct,
-                "avg_vol": avg_vol_7d,
-                "vol_915": vol_915,
-                "ty_vol": today_vs,
-                "ty_vol_num": today_vs_num,
-                "pct_915_high":round(((c915["high"]-prev_close)/prev_close)*100,2),
-                "pct_915_low":round(((c915["low"]-prev_close)/prev_close)*100,2),
-                "pct_10_high":round(((c10["high"]-prev_close)/prev_close)*100,2) if c10 else "",
-                "pct_10_low":round(((c10["low"]-prev_close)/prev_close)*100,2) if c10 else "",
-                "pct_12_high":round(((c12["high"]-prev_close)/prev_close)*100,2) if c12 else "",
-                "pct_12_low":round(((c12["low"]-prev_close)/prev_close)*100,2) if c12 else "",
-                "total_vol":fmt_vol(total_vol)
+                "symbol": sym,
+                "ltp": round(ltp,2),
+                "change": pct,
+                "vol_915": fmt_vol(c915["volume"]),
+                "total_vol": fmt_vol(total_vol)
             })
 
             time.sleep(0.2)
-
         except:
-            continue
+            pass
 
     dfm = pd.DataFrame(rows)
 
+
+
     gainers = dfm[dfm["change"]>0].sort_values("change",ascending=False).head(20)
     losers  = dfm[dfm["change"]<0].sort_values("change").head(20)
-
-
-    # ===== SAVE FIRST SEEN ONLY FOR TOP STOCKS =====
-    now_time = datetime.now().strftime("%H:%M:%S")
-
-    for _, r in pd.concat([gainers, losers]).iterrows():
-        sym = r["symbol"]
-        if sym not in FIRST_SEEN:
-            FIRST_SEEN[sym] = now_time
-
-    with open(FIRST_SEEN_FILE, "w") as f:
-        json.dump(FIRST_SEEN, f)
-
-    for lst in (gainers, losers):
-        lst["first_seen"] = lst["symbol"].map(FIRST_SEEN)
 
     return render_template(
         "index.html",
@@ -148,65 +91,33 @@ def index():
         losers=losers.to_dict("records")
     )
 
-# ================= CHART PAGE =================
-@app.route("/chart/<symbol>")
-def chart(symbol):
-    return render_template("chart.html", symbol=symbol)
-
 # ================= API FOR CHART =================
 @app.route("/api/candles/<symbol>")
 def api_candles(symbol):
 
     if symbol not in symbol_token:
-        return jsonify({"candles": [], "sma20": [], "sma50": [], "line10": None})
+        return jsonify({"candles": []})
 
     token = symbol_token[symbol]
     to_date = datetime.now().date()
-    from_date = to_date - timedelta(days=5)
+    from_date = to_date - timedelta(days=3)
 
     candles = kite.historical_data(token, from_date, to_date, "5minute")
 
-    chart, closes, times = [], [], []
-    high10 = None
+    chart = []
 
     for c in candles:
         t = c["date"].time()
         if t < dtime(9,15) or t > dtime(15,30):
             continue
 
-        ts = int(c["date"].timestamp())
-
         chart.append({
-            "time":ts,
-            "open":c["open"],
-            "high":c["high"],
-            "low":c["low"],
-            "close":c["close"]
+            "time": int(c["date"].timestamp()),
+            "open": c["open"],
+            "high": c["high"],
+            "low": c["low"],
+            "close": c["close"]
         })
 
-        closes.append(c["close"])
-        times.append(ts)
-
-        if c["date"].date()==to_date and c["date"].strftime("%H:%M")=="10:00":
-            high10 = c["high"]
-
-    sma20, sma50 = [], []
-
-    for i in range(len(closes)):
-        if i>=19:
-            sma20.append({"time":times[i],"value":sum(closes[i-19:i+1])/20})
-        if i>=49:
-            sma50.append({"time":times[i],"value":sum(closes[i-49:i+1])/50})
-
-    return jsonify({
-        "candles":chart,
-        "sma20":sma20,
-        "sma50":sma50,
-        "line10":high10
-    })
-
-# ================= RUN =================
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    return jsonify({"candles": chart})
 
