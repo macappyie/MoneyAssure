@@ -11,8 +11,8 @@ app = Flask(__name__)
 # ================= CONFIG =================
 API_KEY = "awh2j04pcd83zfvq"
 
-# READ TOKEN FROM ENV (RENDER SAFE)
-ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
+with open("access_token.txt") as f:
+    ACCESS_TOKEN = f.read().strip()
 
 kite = KiteConnect(api_key=API_KEY)
 kite.set_access_token(ACCESS_TOKEN)
@@ -44,9 +44,6 @@ def fmt_vol(v):
 # ================= INDEX PAGE =================
 @app.route("/")
 def index():
-
-    # small delay for render cold start
-    time.sleep(2)
 
     rows = []
     today = datetime.now().date()
@@ -117,8 +114,7 @@ def index():
                 "total_vol":fmt_vol(total_vol)
             })
 
-            time.sleep(0.2)
-
+            time.sleep(0.25)
         except:
             continue
 
@@ -126,6 +122,7 @@ def index():
 
     gainers = dfm[dfm["change"]>0].sort_values("change",ascending=False).head(20)
     losers  = dfm[dfm["change"]<0].sort_values("change").head(20)
+
 
 
     # ===== SAVE FIRST SEEN ONLY FOR TOP STOCKS =====
@@ -139,6 +136,7 @@ def index():
     with open(FIRST_SEEN_FILE, "w") as f:
         json.dump(FIRST_SEEN, f)
 
+    # attach first seen to rows
     for lst in (gainers, losers):
         lst["first_seen"] = lst["symbol"].map(FIRST_SEEN)
 
@@ -206,6 +204,9 @@ def api_candles(symbol):
     })
 
 # ================= RUN =================
+#if __name__ == "__main__":
+#    app.run(host="0.0.0.0", port=3002, debug=True)
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
