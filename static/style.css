@@ -12,11 +12,11 @@ display:flex;
 justify-content:space-around;
 }
 
-.green{width:48%;background:#062a1a;padding:10px;border-radius:12px;}
-.red{width:48%;background:#2a0a0a;padding:10px;border-radius:12px;}
+.green{width:45%;background:#063020;padding:15px;border-radius:12px;}
+.red{width:45%;background:#300606;padding:15px;border-radius:12px;}
 
 table{width:100%;border-collapse:collapse;}
-th,td{padding:6px;border-bottom:1px solid #333;}
+th,td{padding:8px;border-bottom:1px solid #333;}
 
 .pos{color:#00ff88;}
 .neg{color:#ff4444;}
