@@ -3,5 +3,4 @@ gunicorn
 pandas
 kiteconnect
 requests
-matplotlib
 
