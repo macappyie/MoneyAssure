@@ -11,7 +11,7 @@ app = Flask(__name__)
 # ================= CONFIG =================
 API_KEY = "awh2j04pcd83zfvq"
 
-
+# ACCESS TOKEN FROM RENDER ENV
 ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 
 kite = KiteConnect(api_key=API_KEY)
@@ -76,6 +76,7 @@ def index():
             if len(vols)>=7:
                 avg_raw = sum([v["volume"] for v in vols[-7:]])/7
 
+
             rows.append({
                 "symbol":sym,
                 "ltp":round(ltp,2),
@@ -93,13 +94,15 @@ def index():
                 "total_vol":fmt_vol(total_vol)
             })
 
-            time.sleep(0.2)
+            time.sleep(0.1)
         except:
             continue
 
     dfm = pd.DataFrame(rows)
-    gainers = dfm[dfm["change"]>0].sort_values("change",ascending=False).head(20)
-    losers = dfm[dfm["change"]<0].sort_values("change").head(20)
+
+    # TOP 10 ONLY
+    gainers = dfm[dfm["change"]>0].sort_values("change",ascending=False).head(10)
+    losers = dfm[dfm["change"]<0].sort_values("change").head(10)
 
     now = datetime.now().strftime("%H:%M:%S")
 
@@ -113,7 +116,8 @@ def index():
     gainers["first_seen"]=gainers["symbol"].map(FIRST_SEEN)
     losers["first_seen"]=losers["symbol"].map(FIRST_SEEN)
 
-    return render_template("index.html",
+    return render_template(
+        "index.html",
         gainers=gainers.to_dict("records"),
         losers=losers.to_dict("records")
     )
